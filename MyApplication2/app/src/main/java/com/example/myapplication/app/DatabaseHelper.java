@@ -8,13 +8,17 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.content.Context;
 import android.os.Bundle;
 import android.os.Parcel;
+import android.os.Parcelable;
+import android.util.Log;
+import android.widget.Toast;
 
+import java.io.Console;
 import java.util.ArrayList;
 
 /**
  * Created by Christopher on 6/17/2014.
  */
-public class DatabaseHelper extends SQLiteOpenHelper {
+public final class DatabaseHelper extends SQLiteOpenHelper{
 
     // All Static variables
     // Database Version
@@ -35,7 +39,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public DatabaseHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
+    private static DatabaseHelper instance;
 
+    public static synchronized DatabaseHelper getInstance(Context context) {
+        if (instance == null)
+            instance = new DatabaseHelper(context);
+        return instance;
+    }
     // Creating Tables
     @Override
     public void onCreate(SQLiteDatabase db) {
@@ -55,60 +65,55 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void addContact (Intent i)
+    public void addContact (String n, String p, String e)
     {
         //get the db
         SQLiteDatabase db = getWritableDatabase();
         //create the values to write to the db
         ContentValues values = new ContentValues();
-        values.put(KEY_NAME, i.getStringExtra("Name"));
-        values.put(KEY_PH_NO, i.getStringExtra("PhoneNumber"));
-        values.put(KEY_EM_AD, i.getStringExtra("EmailAddress"));
-
+        values.put(KEY_NAME, n);
+        values.put(KEY_PH_NO, p);
+        values.put(KEY_EM_AD, e);
         //write the values to the db
         db.insert(TABLE_CONTACTS, null, values);
-
         //close the db
         db.close();
     }
-
-    public Contact getContact(int id) {
+    public void removeAllContacts()
+    {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.delete(TABLE_CONTACTS, null, null);
+    }
+    public Intent getContact(int id) {
         SQLiteDatabase db = this.getReadableDatabase();
-
+        Intent i = new Intent();
         Cursor cursor = db.query(TABLE_CONTACTS, new String[] { KEY_ID,
                         KEY_NAME, KEY_PH_NO, KEY_EM_AD }, KEY_ID + "=?",
                 new String[] { String.valueOf(id) }, null, null, null, null);
         if (cursor != null)
             cursor.moveToFirst();
 
-        Contact contact = new Contact(Integer.parseInt(cursor.getString(0)), cursor.getString(1), cursor.getString(2), cursor.getString(3));
+        Contact contact = new Contact(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_ID))), cursor.getString(cursor.getColumnIndex(KEY_NAME)), cursor.getString(cursor.getColumnIndex(KEY_PH_NO)), cursor.getString(cursor.getColumnIndex(KEY_EM_AD)));
         // return contact
-        return contact;
+        i.putExtra("Contact", contact);
+        return i;
     }
 
-    public ArrayList<Contact> getAllContacts() {
-        ArrayList<Contact> contactList = new ArrayList<Contact>();
+    public ArrayList<String> getAllContacts() {
         // Select All Query
-        String selectQuery = "SELECT  * FROM " + TABLE_CONTACTS;
+        String selectQuery = "SELECT * FROM " + TABLE_CONTACTS;
 
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
-
         // looping through all rows and adding to list
-        if (cursor.moveToFirst()) {
-            do {
-                Contact contact = new Contact();
-                contact.SetId(Integer.parseInt(cursor.getString(0)));
-                contact.SetName(cursor.getString(1));
-                contact.SetPhoneNumber(cursor.getString(2));
-                contact.SetEmailAddress(cursor.getString(3));
-                // Adding contact to list
-                contactList.add(contact);
-            } while (cursor.moveToNext());
+        ArrayList<String> itemList = new ArrayList<String>();
+        while(cursor.moveToNext()) {
+            Contact contact = new Contact(Integer.parseInt(cursor.getString(cursor.getColumnIndex(KEY_ID))), cursor.getString(cursor.getColumnIndex(KEY_NAME)), cursor.getString(cursor.getColumnIndex(KEY_PH_NO)), cursor.getString(cursor.getColumnIndex(KEY_EM_AD)));
+            // Adding contact to list
+            itemList.add(contact.toString());
+            Log.v("Name", contact.GetName());
         }
-
-        // return contact list
-        return contactList;
+        return itemList;
     }
     public int getContactsCount() {
         String countQuery = "SELECT * FROM " + TABLE_CONTACTS;

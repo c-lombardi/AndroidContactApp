@@ -9,6 +9,7 @@ import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.Intent;
 import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.v13.app.FragmentPagerAdapter;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -26,6 +27,7 @@ import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class MainActivity extends FragmentActivity implements ActionBar.TabListener {
 
@@ -46,12 +48,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
     DatabaseHelper db = new DatabaseHelper(this);
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
-        db = new DatabaseHelper(this);
-        db.deleteContact(db.getContact(1));
+        db = DatabaseHelper.getInstance(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
+        //.removeAllContacts();
         // Set up the action bar.
         final ActionBar actionBar = getActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
@@ -145,8 +145,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
         @Override
         public int getCount() {
-            // Show 4 total pages.
-            return 4;
+            // Show 3 total pages.
+            return 3;
         }
 
         @Override
@@ -159,8 +159,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                     return getString(R.string.title_section2).toUpperCase(l);
                 case 2:
                     return getString(R.string.title_section3).toUpperCase(l);
-                case 3:
-                    return "Section 4".toUpperCase(l);
             }
             return null;
         }
@@ -204,16 +202,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                     String n = name.getText().toString();
                     String p = phoneNumber.getText().toString();
                     String e = emailAddress.getText().toString();
-                    Bundle b = new Bundle();
-                    if (!(n == null || p == null || e == null)) {
-                        Intent i = new Intent(MainActivity.this, DatabaseHelper.class);
-                        //Contact c = new Contact(n, p, e);
-                        i.putExtra("Name", n);
-                        i.putExtra("PhoneNumber", p);
-                        i.putExtra("EmailAddress", e);
-                        //i.putExtra("Contact", c);
-                        db.addContact(i);
-                    }
+                    db.addContact(n, p, e);
+                    Toast.makeText(MainActivity.this, "Added " + n, Toast.LENGTH_LONG).show();
                     break;
             }
         }
@@ -235,19 +225,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
                     EditText EmailText = (EditText) rootView.findViewById(R.id.addEmail);
                     AddContact.setOnClickListener(this);
                     break;
-                case 2:
+                case 3:
                     rootView = inflater.inflate(R.layout.fragment_main, container, false);
-                    ArrayList<Contact> ContactList = db.getAllContacts();
+                    ArrayList<String> items = db.getAllContacts();
                     ListView v = (ListView) findViewById(R.id.listView);
-                    ArrayList<String> items = new ArrayList<String>();
-                    for(Contact c : ContactList)
-                    {
-                        items.add("Name: " + c.GetName() + "\nPhone Number: " + c.GetPhoneNumber() + "\nEmail Address: " + c.GetEmailAddress() + "\n");
-                    }
+                     new ArrayList<String>();
+                    ArrayList<Contact> contactList = new ArrayList<Contact>();
                     if (items.size() > 0)
                         v.setAdapter(new ArrayAdapter<String>(rootView.getContext(), android.R.layout.simple_list_item_1, items));
-                    break;
-                default:
                     break;
             }
 //            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
