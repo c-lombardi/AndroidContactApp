@@ -36,11 +36,11 @@ public class Contact implements Parcelable {
     }
 
     public void SetPhoneNumber(String p) {
-        Name = p;
+        PhoneNumber = p;
     }
 
     public void SetEmailAddress(String e) {
-        Name = e;
+        EmailAddress = e;
     }
 
     public Contact()
@@ -75,6 +75,7 @@ public class Contact implements Parcelable {
     }
     @Override
     public void writeToParcel(Parcel pc, int flags) {
+        pc.writeInt(GetId());
         pc.writeString(GetName());
         pc.writeString(GetPhoneNumber());
         pc.writeString(GetEmailAddress());
@@ -92,8 +93,15 @@ public class Contact implements Parcelable {
 /** Ctor from Parcel, reads back fields IN THE ORDER they were written */
     public Contact(Parcel pc)
         {
+        SetId(pc.readInt());
         SetName(pc.readString());
         SetPhoneNumber(pc.readString());
         SetEmailAddress(pc.readString());
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Name: " + GetName() + "\nPhone Number: " + GetPhoneNumber() + "\nEmail Address: " + GetEmailAddress() + "\n";
     }
 }
